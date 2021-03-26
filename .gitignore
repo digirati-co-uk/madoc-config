@@ -1,9 +1,9 @@
-var/es
-var/files
-!var/.gitkeep
+local/var/es
+local/var/files
+!local/var/.gitkeep
 .terraform
-var/shared-database
-var/mysql
-var/certs
-var/jwt
-var/data
+local/var/shared-database
+local/var/mysql
+local/var/certs
+local/var/jwt
+local/var/data
