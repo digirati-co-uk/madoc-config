@@ -1,0 +1,218 @@
+version: "3.9"
+services:
+
+
+  ## API Gateway
+  gateway:
+    image: ghcr.io/digirati-co-uk/madoc-api-gateway:latest
+    environment:
+      - TYK_GW_STORAGE_HOST=gateway-redis
+      - TYK_GW_SECRET=A_GATEWAY_SECRET
+      - JWT_SERVICES=tasks-api,madoc-api,configuration-api,storage-api
+    ports:
+      - "8878:8080"
+    links:
+      - madoc
+      - gateway-redis
+      - tasks-api
+      - model-api
+      - madoc-ts
+      - config-service
+      - storage-api
+      - okra
+      - search
+    volumes:
+      - certs:/openssl-certs:Z
+    depends_on:
+      - certs
+      - gateway-redis
+
+  ## Databases + Certs
+  certs:
+    image: ghcr.io/digirati-co-uk/madoc-certs:latest
+    volumes:
+      - certs:/openssl-certs:Z
+
+  gateway-redis:
+    image: redis:5-alpine
+
+  shared-postgres:
+    image: ghcr.io/digirati-co-uk/madoc-shared-postgres:latest
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres_password
+      - POSTGRES_MADOC_TS_USER=madoc_ts
+      - POSTGRES_MADOC_TS_SCHEMA=madoc_ts
+      - POSTGRES_MADOC_TS_PASSWORD=madoc_ts_password
+      - POSTGRES_TASKS_API_USER=tasks_api
+      - POSTGRES_TASKS_API_SCHEMA=tasks_api
+      - POSTGRES_TASKS_API_PASSWORD=tasks_api_password
+      - POSTGRES_MODELS_API_USER=models_api
+      - POSTGRES_MODELS_API_SCHEMA=models_api
+      - POSTGRES_MODELS_API_PASSWORD=models_api_password
+      - POSTGRES_CONFIG_SERVICE_USER=config_service
+      - POSTGRES_CONFIG_SERVICE_SCHEMA=config_service
+      - POSTGRES_CONFIG_SERVICE_PASSWORD=config_service_password
+      - POSTGRES_SEARCH_API_USER=search_api
+      - POSTGRES_SEARCH_API_SCHEMA=search_api
+      - POSTGRES_SEARCH_API_PASSWORD=search_api_password
+    volumes:
+      - shared_postgres_data:/var/lib/postgresql/data:Z
+
+  madoc-database:
+    image: ghcr.io/digirati-co-uk/madoc-mysql:latest
+    environment:
+      - MYSQL_RANDOM_ROOT_PASSWORD=yes
+      - MYSQL_DATABASE=omeka_s
+      - MYSQL_USER=omeka_s
+      - MYSQL_PASSWORD=Password123
+      - MYSQL_PORT=3306
+    volumes:
+      - mysql_data:/var/lib/mysql:Z
+
+
+  ## Services.
+
+  madoc:
+    image: ghcr.io/digirati-co-uk/madoc-omeka:latest
+    links:
+      - madoc-database
+    environment:
+      - APP_ENV=production
+      - OMEKA__DATABASE_HOST=madoc-database
+      - OMEKA__DATABASE_NAME=omeka_s
+      - OMEKA__DATABASE_USER=omeka_s
+      - OMEKA__DATABASE_PASSWORD=Password123
+      - OMEKA__DATABASE_PORT=3306
+      - OMEKA__MAIN_SITE_DOMAIN=http://localhost:8878
+    volumes:
+      - omeka_files:/srv/omeka/files:Z
+      - certs:/openssl-certs:Z
+
+  madoc-ts:
+    image: ghcr.io/digirati-co-uk/madoc-ts:latest
+    restart: on-failure
+    volumes:
+      - certs:/openssl-certs:Z
+      - jwt:/home/node/app/service-jwt-responses:Z
+      - omeka_files:/home/node/app/omeka-files:Z
+    environment:
+      - DATABASE_HOST=shared-postgres
+      - DATABASE_NAME=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USER=madoc_ts
+      - DATABASE_SCHEMA=madoc_ts
+      - DATABASE_PASSWORD=madoc_ts_password
+      - OMEKA__DATABASE_HOST=madoc-database
+      - OMEKA__DATABASE_NAME=omeka_s
+      - OMEKA__DATABASE_USER=omeka_s
+      - OMEKA__DATABASE_PASSWORD=Password123
+      - OMEKA__DATABASE_PORT=3306
+      - OMEKA__URL=http://madoc
+      - REDIS_HOST=gateway-redis
+      - API_GATEWAY=http://gateway:8080
+      - OMEKA_FILE_DIRECTORY=/home/node/app/omeka-files
+      - NODE_ENV=production
+      - MIGRATE=true
+      - GATEWAY_HOST=http://localhost:8878
+    links:
+      - shared-postgres
+      - madoc-database
+      - madoc
+    depends_on:
+      - certs
+
+  tasks-api:
+    image: ghcr.io/digirati-co-uk/tasks-api:latest
+    restart: on-failure
+    environment:
+      - SERVER_PORT=3000
+      - DATABASE_HOST=shared-postgres
+      - DATABASE_NAME=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USER=tasks_api
+      - DATABASE_SCHEMA=tasks_api
+      - DATABASE_PASSWORD=tasks_api_password
+      - QUEUE_LIST=tasks-api,madoc-ts
+      - REDIS_HOST=gateway-redis
+    links:
+      - shared-postgres
+      - gateway-redis
+
+  storage-api:
+    image: ghcr.io/digirati-co-uk/storage-api:latest
+    volumes:
+      - storage-api:/home/node/app/files
+
+  ## Docker hub services
+  model-api:
+    image: digirati/capture-models:latest
+    restart: on-failure
+    environment:
+      - SERVER_PORT=3000
+      - DATABASE_HOST=shared-postgres
+      - DATABASE_NAME=postgres
+      - DATABASE_PORT=5432
+      - DATABASE_USER=models_api
+      - DATABASE_SCHEMA=models_api
+      - DATABASE_PASSWORD=models_api_password
+    links:
+      - shared-postgres
+
+  config-service:
+    image: digirati/madoc_config_service_django:175410fc5b7dbef4cc259686564fbedeb60c8789
+    environment:
+      - USE_DOCKER=yes
+      - IPYTHONDIR=/app/.ipython
+      - MIGRATE=True
+      - LOAD=False
+      - DJANGO_DEBUG=False
+      - WAITRESS=False
+      - POSTGRES_HOST=shared-postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=config_service
+      - POSTGRES_SCHEMA=config_service
+      - POSTGRES_PASSWORD=config_service_password
+      - POSTGRES_DB=postgres
+      - DATABASE_URL=postgres://postgres:postgres_password@shared-postgres:5432/postgres
+    links:
+      - shared-postgres
+
+  search:
+    image: digirati/madoc-search:533bc1f
+    environment:
+      - BROWSABLE=False
+      - USE_DOCKER=yes
+      - IPYTHONDIR=/app/.ipython
+      - MIGRATE=True
+      - LOAD=False
+      - DJANGO_DEBUG=False
+      - DEBUG=False
+      - WAITRESS=False
+      - POSTGRES_HOST=shared-postgres
+      - POSTGRES_PORT=5432
+      - POSTGRES_USER=search_api
+      - POSTGRES_SCHEMA=search_api
+      - POSTGRES_PASSWORD=search_api_password
+      - POSTGRES_DB=postgres
+      - DATABASE_URL=postgres://postgres:postgres_password@shared-postgres:5432/postgres
+    links:
+      - shared-postgres
+
+  okra:
+    image: digirati/okra:5d129c8
+
+volumes:
+
+  # Shared resources
+  certs: {}
+  jwt: {}
+
+  # Databases
+  shared_postgres_data: {}
+  mysql_data: {}
+
+  # Files
+  omeka_files: {}
+  storage-api: {}

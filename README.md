@@ -1,0 +1,4 @@
+# Madoc config
+
+
+[ todo ]

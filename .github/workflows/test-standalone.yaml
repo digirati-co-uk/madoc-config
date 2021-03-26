@@ -1,0 +1,17 @@
+name: Standalone docker compose
+on: push
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Build the stack
+        working-directory: standalone
+        run: docker-compose up -d
+      - name: Test
+        working-directory: standalone
+        run: docker run --network container:standalone-gateway appropriate/curl -s --retry 10 --retry-connrefused http://localhost:8080/s/default/madoc
+      - name: Bring stack down
+        run: |
+          docker-compose stop
+          docker-compose down
