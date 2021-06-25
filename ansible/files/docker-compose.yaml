@@ -33,7 +33,7 @@ services:
       - ./var/certs:/openssl-certs:Z
 
   gateway-redis:
-    image: redis:5-alpine
+    image: redis:5
 
   shared-postgres:
     image: ghcr.io/digirati-co-uk/madoc-shared-postgres:latest
@@ -88,7 +88,7 @@ services:
       - OMEKA__DATABASE_USER=${MYSQL_USER}
       - OMEKA__DATABASE_PASSWORD=${MYSQL_PASSWORD}
       - OMEKA__DATABASE_PORT=${MYSQL_PORT}
-      - OMEKA__MAIN_SITE_DOMAIN=${MAIN_SITE_DOMAIN}
+      - OMEKA__MAIN_SITE_DOMAIN=${GATEWAY_HOST}
       - OMEKA__INTERNAL_URL=${OMEKA_INTERNAL_URL}
       - OMEKA__SMTP_HOST=email-smtp.us-east-1.amazonaws.com
       - OMEKA__SMTP_PORT=587
@@ -124,7 +124,7 @@ services:
       - OMEKA_FILE_DIRECTORY=/home/node/app/omeka-files
       - NODE_ENV=production
       - MIGRATE=true
-      - GATEWAY_HOST=${MAIN_SITE_DOMAIN}
+      - GATEWAY_HOST=${GATEWAY_HOST}
     links:
       - shared-postgres
       - madoc-database
@@ -151,7 +151,7 @@ services:
       - gateway-redis
 
   storage-api:
-    image: ghcr.io/digirati-co-uk/storage-api:latest
+    image: digirati/madoc-storage-api-beta:v2
     volumes:
       - /opt/data/omeka_files/storage-api:/home/node/app/files
 

@@ -1,0 +1,28 @@
+---
+- hosts: database
+  become: yes
+
+  roles:
+    - geerlingguy.postgresql
+
+  tasks:
+    - name: Madoc TS postgres user
+      become: yes
+      become_user: postgres
+      loop: "{{ madoc.shared_postgres.users | dict2items }}"
+      community.postgresql.postgresql_user:
+        db: "{{madoc.shared_postgres.database}}"
+        name: "{{item.schema}}"
+        password: "{{item.password}}"
+        login_unix_socket: "/var/run/postgresql"
+        expires: infinity
+
+    - name: Madoc TS postgres schema
+      become: yes
+      become_user: postgres
+      loop: "{{ madoc.shared_postgres.users | dict2items }}"
+      community.postgresql.postgresql_schema:
+        database: "{{madoc.shared_postgres.database}}"
+        name: "{{item.schema}}"
+        login_user: "{{madoc.shared_postgres.user}}"
+        owner: "{{item.user}}"

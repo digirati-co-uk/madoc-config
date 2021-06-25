@@ -1,0 +1,58 @@
+# Use Ansible Vault to encrypt the secrets.
+
+docker_install_compose: true
+
+madoc:
+
+  # Gateway
+  gateway:
+    host: https://madoc.stephen.wf/                   # Change this to your domain
+    secret: y@@-rwzsqsqTRcuJjp6L8                     # Change this to a random secret
+    docker_host: http://madoc-platform-omeka/
+
+  # Omeka
+  omeka:
+    smtp_user: ""
+    smtp_password: ""
+    mysql_database: omeka_s
+    mysql_user: omeka_s
+    mysql_password: Testpass123                        # Change
+    mysql_port: 3306
+
+  # Postgres connection
+  shared_postgres:
+    database: postgres
+    port: 5432
+    user: postgres
+    password: postgres_password                       # Change
+
+    enabled_users:
+      - madoc_ts
+      - tasks_api
+      - models_api
+      - config_service
+      - search_api
+    users:
+      madoc_ts:
+        user: madoc_ts
+        schema: madoc_ts
+        password: madoc_ts_password                   # Change
+      tasks_api:
+        user: tasks_api
+        schema: tasks_api
+        password: tasks_api_password                  # Change
+      models_api:
+        user: models_api
+        schema: models_api
+        password: models_api_password                # Change
+      config_service:
+        user: config_service
+        schema: config_service
+        password: config_service_password            # Change
+      search_api:
+        user: search_api
+        schema: search_api
+        password: search_api_password                # Change
+
+
+
