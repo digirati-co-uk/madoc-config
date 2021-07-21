@@ -1,0 +1,58 @@
+# This follows bootstrap_ec2.tmpl
+---
+- hosts: server
+  become: yes
+
+  tasks:
+
+    # @todo postgres database backups
+    # @todo mysql database backups
+
+    # @todo Mounts:
+    #   if ! blkid --probe --match-types ext4 /dev/xvdf ; then
+    #    mkfs.ext4 /dev/xvdf
+    #   fi
+    #   mount /dev/xvdf /opt/data
+    #   echo /dev/xvdf /opt/data ext4 defaults,nofail 0 2 >> /etc/fstab
+    #
+    #   mkdir -p /mnt/backup
+    #   if ! blkid --probe --match-types ext4 /dev/xvdg ; then
+    #       mkfs.ext4 /dev/xvdg
+    #   fi
+    #   mount /dev/xvdg /mnt/backup
+    #   echo /dev/xvdg /mnt/backup ext4 defaults,nofail 0 2 >> /etc/fstab
+
+    - name: Data directory
+      ansible.builtin.file:
+        path: /opt/data/
+        state: directory
+        mode: '0777'
+
+    - name: Shared postgres directory
+      ansible.builtin.file:
+        path: /opt/data/shared_postgres_data
+        state: directory
+        mode: '0777'
+
+    - name: PostgreSQL backups
+      ansible.builtin.file:
+        path: /mnt/backup/postgres/.snapshots/
+        state: directory
+
+    - name: MySQL backups
+      ansible.builtin.file:
+        path: /mnt/backup/mysql/.snapshots/
+        state: directory
+
+
+    # @todo back up files
+    #   mv /tmp/docker-compose.yml /etc/docker/compose/madoc/docker-compose.yml
+    #   mv /tmp/madoc.service /etc/systemd/system/madoc.service
+    #   mv /tmp/backup/*.timer /etc/systemd/system/
+    #   mv /tmp/backup/*.service /etc/systemd/system/
+    #   mv /tmp/backup/*.sh /usr/bin/
+    #   chmod +rwx /usr/bin/backup-madoc.sh
+    #   chmod +rwx /usr/bin/backup-mysql.sh
+    #   chmod +rwx /usr/bin/backup-postgres.sh
+    #   mv /tmp/backup/rsnapshot.conf /etc/rsnapshot.conf
+    #   mv /tmp/backup/rsnapshot-postgres.conf /etc/rsnapshot-postgres.conf

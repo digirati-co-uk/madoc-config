@@ -1,0 +1,77 @@
+# This follows bootstrap_ec2.tmpl
+---
+- hosts: server
+  become: yes
+
+  vars:
+    pip_executable: pip3
+    pip_install_packages:
+      - name: docker
+      - name: setuptools_rust
+      - name: cryptography
+        version: "3.3.2"
+      - name: docker-compose
+        version: "1.26.0"
+
+  # Install docker
+  roles:
+    - geerlingguy.docker
+    - geerlingguy.pip
+
+  tasks:
+
+    - name: Data directory
+      ansible.builtin.file:
+        path: /opt/data/
+        state: directory
+        mode: '0777'
+
+    - name: Omeka files directory
+      ansible.builtin.file:
+        path: /opt/data/omeka_files
+        state: directory
+        mode: '0777'
+
+    - name: Storage API directory
+      ansible.builtin.file:
+        path: /opt/data/omeka_files/storage-api
+        state: directory
+        mode: '0777'
+
+    - name: Generated JWT mount
+      ansible.builtin.file:
+        path: /etc/docker/compose/madoc/var/jwt
+        state: directory
+        mode: '0777'
+
+    - name: Generated certs mount
+      ansible.builtin.file:
+        path: /etc/docker/compose/madoc/var/certs
+        state: directory
+        mode: '0777'
+
+    - name: Create a directory if it does not exist
+      ansible.builtin.file:
+        path: /etc/docker/compose/madoc/
+        state: directory
+        mode: '0755'
+
+    - name: Set up .env file
+      template:
+        src: madoc-env.j2
+        dest: "/etc/docker/compose/madoc/.env"
+
+    - name: Sync compose
+      synchronize:
+        src: ./files/docker-compose.yaml
+        dest: /etc/docker/compose/madoc/docker-compose.yaml
+
+
+    - name: Redis Hugepage fix
+      shell: "echo never > /sys/kernel/mm/transparent_hugepage/enabled"
+
+    - name: Start services
+      community.docker.docker_compose:
+        project_src: /etc/docker/compose/madoc
+        build: no
+      register: output

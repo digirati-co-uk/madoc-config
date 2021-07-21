@@ -1,0 +1,46 @@
+# MySQL
+MYSQL_DATABASE={{ madoc.omeka.mysql_database }}
+MYSQL_USER={{ madoc.omeka.mysql_user }}
+MYSQL_PASSWORD={{ madoc.omeka.mysql_password }}
+MYSQL_PORT={{ madoc.omeka.mysql_port }}
+
+# Omeka
+APP_ENV=production
+OMEKA_INTERNAL_URL={{ madoc.gateway.docker_host }}
+
+
+# SMTP
+OMEKA_SMTP_UNAME={{madoc.omeka.smtp_user}}
+OMEKA_SMTP_PWORD={{madoc.omeka.smtp_password}}
+
+# Gateway
+GATEWAY_HOST={{ madoc.gateway.host }}
+GATEWAY_SECRET={{ madoc.gateway.secret }}
+TASKS_QUEUE_LIST=tasks-api,madoc-ts
+
+# Postgres
+POSTGRES_DB={{ madoc.shared_postgres.database }}
+POSTGRES_PORT={{ madoc.shared_postgres.port }}
+POSTGRES_USER={{ madoc.shared_postgres.user }}
+POSTGRES_PASSWORD={{ madoc.shared_postgres.password }}
+
+# Postgres users
+POSTGRES_MADOC_TS_USER={{ madoc.shared_postgres.users.madoc_ts.user }}
+POSTGRES_MADOC_TS_SCHEMA={{ madoc.shared_postgres.users.madoc_ts.schema }}
+POSTGRES_MADOC_TS_PASSWORD={{ madoc.shared_postgres.users.madoc_ts.password }}
+
+POSTGRES_TASKS_API_USER={{ madoc.shared_postgres.users.tasks_api.user }}
+POSTGRES_TASKS_API_SCHEMA={{ madoc.shared_postgres.users.tasks_api.schema }}
+POSTGRES_TASKS_API_PASSWORD={{ madoc.shared_postgres.users.tasks_api.password }}
+
+POSTGRES_MODELS_API_USER={{ madoc.shared_postgres.users.models_api.user }}
+POSTGRES_MODELS_API_SCHEMA={{ madoc.shared_postgres.users.models_api.schema }}
+POSTGRES_MODELS_API_PASSWORD={{ madoc.shared_postgres.users.models_api.password }}
+
+POSTGRES_CONFIG_SERVICE_USER={{ madoc.shared_postgres.users.config_service.user }}
+POSTGRES_CONFIG_SERVICE_SCHEMA={{ madoc.shared_postgres.users.config_service.schema }}
+POSTGRES_CONFIG_SERVICE_PASSWORD={{ madoc.shared_postgres.users.config_service.password }}
+
+POSTGRES_SEARCH_API_USER={{ madoc.shared_postgres.users.search_api.user }}
+POSTGRES_SEARCH_API_SCHEMA={{ madoc.shared_postgres.users.search_api.schema }}
+POSTGRES_SEARCH_API_PASSWORD={{ madoc.shared_postgres.users.search_api.password }}
