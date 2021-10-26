@@ -1,0 +1,12 @@
+{
+  "name": "madoc-config-tools",
+  "version": "1.0.0",
+  "main": "index.js",
+  "description": "...",
+  "repository": "https://github.com/digirati-co-uk/madoc-config",
+  "license": "MIT",
+  "dependencies": {
+    "bcrypt": "^5.0.1",
+    "chalk": "^4.1.2"
+  }
+}
