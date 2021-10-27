@@ -9,8 +9,12 @@ docker-compose up -d
 MADOC_VERSION=2.0 docker-compose up -d
 ```
 
-This will set up and create a local instance of Madoc. By default, the installation code required to proceed through the
+This will set up and create a local instance of Madoc on port `8878`. By default, the installation code required to proceed through the
 setup process is `password`.
+
+```
+http://localhost:8878/
+```
 
 The default version is the latest `main` branch (QA).
 
