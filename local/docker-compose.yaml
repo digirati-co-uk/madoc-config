@@ -1,19 +1,12 @@
 version: "3"
 services:
+  # Internal services
 
-
-  ## API Gateway
   gateway:
-    image: ghcr.io/digirati-co-uk/madoc-api-gateway:latest
-    environment:
-      - TYK_GW_STORAGE_HOST=gateway-redis
-      - TYK_GW_SECRET=${GATEWAY_SECRET}
-      - JWT_SERVICES=tasks-api,madoc-api,configuration-api,storage-api
+    image: ghcr.io/digirati-co-uk/madoc-nginx:${MADOC_VERSION:-main}
     ports:
-      - "8878:8080"
+      - "${PORTS_GATEWAY:-8888}:8080"
     links:
-      - madoc
-      - gateway-redis
       - tasks-api
       - model-api
       - madoc-ts
@@ -21,23 +14,12 @@ services:
       - storage-api
       - okra
       - search
-    volumes:
-      - ./var/certs:/openssl-certs:Z
-    depends_on:
-      - certs
-      - gateway-redis
-
-  ## Databases + Certs
-  certs:
-    image: ghcr.io/digirati-co-uk/madoc-certs:latest
-    volumes:
-      - ./var/certs:/openssl-certs:Z
 
   gateway-redis:
     image: redis:5-alpine
 
   shared-postgres:
-    image: ghcr.io/digirati-co-uk/madoc-shared-postgres:latest
+    image: ghcr.io/digirati-co-uk/madoc-postgres:${MADOC_VERSION:-main}
     environment:
       - POSTGRES_DB=${POSTGRES_DB}
       - POSTGRES_USER=${POSTGRES_USER}
@@ -57,52 +39,19 @@ services:
       - POSTGRES_SEARCH_API_USER=${POSTGRES_SEARCH_API_USER}
       - POSTGRES_SEARCH_API_SCHEMA=${POSTGRES_SEARCH_API_SCHEMA}
       - POSTGRES_SEARCH_API_PASSWORD=${POSTGRES_SEARCH_API_PASSWORD}
+
+    ports:
+      - "${PORTS_SHARED_POSTGRES:-5432}:5432"
     volumes:
-      - ./var/data/shared_postgres_data:/var/lib/postgresql/data:Z
-
-  madoc-database:
-    image: ghcr.io/digirati-co-uk/madoc-mysql:latest
-    environment:
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
-      - MYSQL_PORT=${MYSQL_PORT}
-    volumes:
-      - ./var/data/mysql_data:/var/lib/mysql:Z
-
-
-  ## Services.
-
-  madoc:
-    image: ghcr.io/digirati-co-uk/madoc-omeka:latest
-    links:
-      - madoc-database
-    environment:
-      - APP_ENV=${APP_ENV}
-      - OMEKA__DATABASE_HOST=madoc-database
-      - OMEKA__DATABASE_NAME=${MYSQL_DATABASE}
-      - OMEKA__DATABASE_USER=${MYSQL_USER}
-      - OMEKA__DATABASE_PASSWORD=${MYSQL_PASSWORD}
-      - OMEKA__DATABASE_PORT=${MYSQL_PORT}
-      - OMEKA__MAIN_SITE_DOMAIN=${MAIN_SITE_DOMAIN}
-      - OMEKA__INTERNAL_URL=${OMEKA_INTERNAL_URL}
-      - OMEKA__SMTP_HOST=email-smtp.us-east-1.amazonaws.com
-      - OMEKA__SMTP_PORT=587
-      - OMEKA__SMTP_SECURITY=tls
-      - OMEKA__SMTP_USERNAME=${OMEKA_SMTP_UNAME}
-      - OMEKA__SMTP_PASSWORD=${OMEKA_SMTP_PWORD}
-    volumes:
-      - ./var/data/omeka_files:/srv/omeka/files:Z
-      - ./var/certs:/openssl-certs:Z
+      - ./var/shared-database:/var/lib/postgresql/data:Z
 
   madoc-ts:
-    image: ghcr.io/digirati-co-uk/madoc-ts:latest
-    restart: on-failure
+    build:
+      context: services/madoc-ts
+      dockerfile: Dockerfile.dev
     volumes:
-      - ./var/certs:/openssl-certs:Z
       - ./var/jwt:/home/node/app/service-jwt-responses:Z
-      - ./var/data/omeka_files:/home/node/app/omeka-files:Z
+      - ./var/data/files:/home/node/app/files:Z
     environment:
       - DATABASE_HOST=shared-postgres
       - DATABASE_NAME=${POSTGRES_DB}
@@ -110,28 +59,23 @@ services:
       - DATABASE_USER=${POSTGRES_MADOC_TS_USER}
       - DATABASE_SCHEMA=${POSTGRES_MADOC_TS_SCHEMA}
       - DATABASE_PASSWORD=${POSTGRES_MADOC_TS_PASSWORD}
-      - OMEKA__DATABASE_HOST=madoc-database
-      - OMEKA__DATABASE_NAME=${MYSQL_DATABASE}
-      - OMEKA__DATABASE_USER=${MYSQL_USER}
-      - OMEKA__DATABASE_PASSWORD=${MYSQL_PASSWORD}
-      - OMEKA__DATABASE_PORT=${MYSQL_PORT}
-      - OMEKA__URL=http://madoc
       - REDIS_HOST=gateway-redis
       - API_GATEWAY=http://gateway:8080
-      - OMEKA_FILE_DIRECTORY=/home/node/app/omeka-files
-      - NODE_ENV=production
+      - GATEWAY_HOST=${GATEWAY_HOST}
+      - STORAGE_FILE_DIRECTORY=/home/node/app/files
+      - MADOC_INSTALLATION_CODE=${MADOC_INSTALLATION_CODE}
       - MIGRATE=true
-      - GATEWAY_HOST=${MAIN_SITE_DOMAIN}
+      - SMTP_HOST=${SMTP_HOST}
+      - SMTP_PORT=${SMTP_PORT}
+      - SMTP_SECURITY=${SMTP_SECURITY}
+      - SMTP_USER=${SMTP_USER}
+      - SMTP_PASSWORD=${SMTP_PASSWORD}
+      - MAIL_FROM_USER=${MAIL_FROM_USER}
     links:
       - shared-postgres
-      - madoc-database
-      - madoc
-    depends_on:
-      - certs
 
   tasks-api:
     image: ghcr.io/digirati-co-uk/tasks-api:latest
-    restart: on-failure
     environment:
       - SERVER_PORT=3000
       - DATABASE_HOST=shared-postgres
@@ -140,22 +84,14 @@ services:
       - DATABASE_USER=${POSTGRES_TASKS_API_USER}
       - DATABASE_SCHEMA=${POSTGRES_TASKS_API_SCHEMA}
       - DATABASE_PASSWORD=${POSTGRES_TASKS_API_PASSWORD}
-      - QUEUE_LIST=${TASKS_QUEUE_LIST}
+      - QUEUE_LIST=${TASKS_QUEUE_LIST:-tasks-api,madoc-ts}
       - REDIS_HOST=gateway-redis
     links:
       - shared-postgres
       - gateway-redis
 
-  storage-api:
-    image: ghcr.io/digirati-co-uk/storage-api:latest
-    volumes:
-      - ./var/data/omeka_files/storage-api:/home/node/app/files
-
-  ## Docker hub services
-
   model-api:
     image: digirati/capture-models:latest
-    restart: on-failure
     environment:
       - SERVER_PORT=3000
       - DATABASE_HOST=shared-postgres
@@ -185,9 +121,13 @@ services:
       - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@shared-postgres:${POSTGRES_PORT}/${POSTGRES_DB}
     links:
       - shared-postgres
+
+  storage-api:
+    image: ghcr.io/digirati-co-uk/storage-api:latest
+    environment:
+      - GATEWAY_HOST=${GATEWAY_HOST}
     volumes:
-      - ./var/data/configuration/schemas:/app/configurator/schemas
-      - ./var/data/configuration/defaults:/app/configurator/default_config
+      - ./var/files/storage-api:/home/node/app/files
 
   search:
     image: digirati/madoc-search:latest
@@ -197,8 +137,6 @@ services:
       - IPYTHONDIR=/app/.ipython
       - MIGRATE=True
       - LOAD=False
-      - DJANGO_DEBUG=False
-      - DEBUG=False
       - WAITRESS=False
       - POSTGRES_HOST=shared-postgres
       - POSTGRES_PORT=${POSTGRES_PORT}
@@ -206,9 +144,10 @@ services:
       - POSTGRES_PASSWORD=${POSTGRES_SEARCH_API_PASSWORD}
       - POSTGRES_SCHEMA=${POSTGRES_SEARCH_API_SCHEMA}
       - POSTGRES_DB=${POSTGRES_DB}
-      - DATABASE_URL=postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@shared-postgres:${POSTGRES_PORT}/${POSTGRES_DB}
+      - DATABASE_URL=postgres://${POSTGRES_SEARCH_API_USER}:${POSTGRES_SEARCH_API_PASSWORD}@shared-postgres:${POSTGRES_PORT}/${POSTGRES_DB}
     links:
       - shared-postgres
 
   okra:
-    image: digirati/okra:5d129c8
+    image: digirati/okra:latest
+
