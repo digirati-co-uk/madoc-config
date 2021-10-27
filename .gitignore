@@ -3,7 +3,6 @@ local/var/files
 !local/var/.gitkeep
 .terraform
 local/var/shared-database
-local/var/mysql
 local/var/certs
 local/var/jwt
 local/var/data
