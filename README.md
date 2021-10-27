@@ -5,14 +5,25 @@ If you want to try madoc out locally, and have Docker installed you can clone th
 docker-compose up -d
 ```
 
+```
+MADOC_VERSION=2.0 docker-compose up -d
+```
+
 This will set up and create a local instance of Madoc. By default, the installation code required to proceed through the
 setup process is `password`.
+
+The default version is the latest `main` branch (QA).
 
 ## Local
 If you want to run a local instance of Madoc that will correctly persist files/database, you can use the local
 configuration inside of `./local` and then from inside that folder run:
 ```
 docker-compose up -d
+```
+
+If you would like to pin the version of Madoc, you can run:
+```
+MADOC_VERSION=2.0 docker-compose up -d
 ```
 
 ## EC2
