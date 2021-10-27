@@ -20,15 +20,7 @@ The default version is the latest `main` branch (QA).
 
 ## Local
 If you want to run a local instance of Madoc that will correctly persist files/database, you can use the local
-configuration inside of `./local` and then from inside that folder run:
-```
-docker-compose up -d
-```
-
-If you would like to pin the version of Madoc, you can run:
-```
-MADOC_VERSION=2.0 docker-compose up -d
-```
+configuration inside of `./local` and then from inside that folder follow the same instructions above.
 
 ## EC2
 See [EC2 README.md](./ec2/README.md)
