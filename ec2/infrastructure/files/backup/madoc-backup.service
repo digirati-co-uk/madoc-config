@@ -1,9 +1,9 @@
 [Unit]
-Description=Backup madoc files and mysql db
+Description=Backup madoc files and Postgres db
 
 [Service]
 Type=simple
-EnvironmentFile=/etc/madoc-environment
+EnvironmentFile=/etc/docker/compose/madoc/.env
 ExecStart=/usr/bin/backup-madoc.sh
 
 [Install]

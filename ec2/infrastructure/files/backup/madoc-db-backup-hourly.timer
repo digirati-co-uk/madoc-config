@@ -1,5 +1,5 @@
 [Unit]
-Description=MySQL hourly backup
+Description=Postgres hourly backup
 
 [Timer]
 # Run hourly

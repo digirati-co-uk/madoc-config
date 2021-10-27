@@ -82,31 +82,31 @@ resource "aws_route53_record" "mx_send_mail_from" {
 }
 
 # IAM
-resource "aws_iam_user" "omeka" {
-  name = "${var.prefix}-omeka"
+resource "aws_iam_user" "madoc" {
+  name = "${var.prefix}-madoc"
 }
 
-resource "aws_iam_access_key" "omeka" {
-  user = aws_iam_user.omeka.name
+resource "aws_iam_access_key" "madoc" {
+  user = aws_iam_user.madoc.name
 }
 
-resource "aws_iam_group" "omeka" {
-  name = "${var.prefix}-omeka"
+resource "aws_iam_group" "madoc" {
+  name = "${var.prefix}-madoc"
 }
 
-resource "aws_iam_group_membership" "omeka" {
-  name = "${var.prefix}-omeka"
+resource "aws_iam_group_membership" "madoc" {
+  name = "${var.prefix}-madoc"
 
   users = [
-    aws_iam_user.omeka.name,
+    aws_iam_user.madoc.name,
   ]
 
-  group = aws_iam_group.omeka.name
+  group = aws_iam_group.madoc.name
 }
 
-resource "aws_iam_group_policy" "omeka" {
-  name  = "${var.prefix}-omeka"
-  group = aws_iam_group.omeka.name
+resource "aws_iam_group_policy" "madoc" {
+  name  = "${var.prefix}-madoc"
+  group = aws_iam_group.madoc.name
 
   policy = <<EOF
 {
@@ -126,10 +126,10 @@ EOF
 }
 
 # Create SecureStrings, picked by user_data for docker-compose env_vars
-resource "aws_ssm_parameter" "smtp_password" {
-  name  = "/madoc/${var.prefix}/${terraform.workspace}/OMEKA_SMTP_UNAME"
+resource "aws_ssm_parameter" "smtp_username" {
+  name  = "/madoc/${var.prefix}/${terraform.workspace}/SMTP_USER"
   type  = "SecureString"
-  value = aws_iam_access_key.omeka.id
+  value = aws_iam_access_key.madoc.id
 
   tags = {
       "terraform" = true,
@@ -137,10 +137,10 @@ resource "aws_ssm_parameter" "smtp_password" {
   }
 }
 
-resource "aws_ssm_parameter" "smtp_username" {
-  name  = "/madoc/${var.prefix}/${terraform.workspace}/OMEKA_SMTP_PWORD"
+resource "aws_ssm_parameter" "smtp_password" {
+  name  = "/madoc/${var.prefix}/${terraform.workspace}/SMTP_PASSWORD"
   type  = "SecureString"
-  value = aws_iam_access_key.omeka.ses_smtp_password
+  value = aws_iam_access_key.madoc.ses_smtp_password
 
   tags = {
       "terraform" = true,

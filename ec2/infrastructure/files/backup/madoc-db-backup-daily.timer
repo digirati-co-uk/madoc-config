@@ -1,5 +1,5 @@
 [Unit]
-Description=MySQL daily backup
+Description=Postgres daily backup
 
 [Timer]
 OnCalendar=02:30
