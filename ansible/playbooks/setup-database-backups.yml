@@ -6,7 +6,6 @@
   tasks:
 
     # @todo postgres database backups
-    # @todo mysql database backups
 
     # @todo Mounts:
     #   if ! blkid --probe --match-types ext4 /dev/xvdf ; then
@@ -39,11 +38,6 @@
         path: /mnt/backup/postgres/.snapshots/
         state: directory
 
-    - name: MySQL backups
-      ansible.builtin.file:
-        path: /mnt/backup/mysql/.snapshots/
-        state: directory
-
 
     # @todo back up files
     #   mv /tmp/docker-compose.yml /etc/docker/compose/madoc/docker-compose.yml
@@ -52,7 +46,5 @@
     #   mv /tmp/backup/*.service /etc/systemd/system/
     #   mv /tmp/backup/*.sh /usr/bin/
     #   chmod +rwx /usr/bin/backup-madoc.sh
-    #   chmod +rwx /usr/bin/backup-mysql.sh
     #   chmod +rwx /usr/bin/backup-postgres.sh
-    #   mv /tmp/backup/rsnapshot.conf /etc/rsnapshot.conf
     #   mv /tmp/backup/rsnapshot-postgres.conf /etc/rsnapshot-postgres.conf

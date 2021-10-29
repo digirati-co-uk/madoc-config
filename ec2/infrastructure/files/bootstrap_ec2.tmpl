@@ -10,7 +10,7 @@ sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg
 wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo apt-key add -
 
 apt-get update
-apt-get install -y docker-ce docker-ce-cli containerd.io awscli rsnapshot mysql-client-5.7 postgresql-client-12
+apt-get install -y docker-ce docker-ce-cli containerd.io awscli rsnapshot postgresql-client-12
 
 curl -L "https://github.com/docker/compose/releases/download/1.25.4/docker-compose-$(uname -s)-$(uname -m)" -o /usr/bin/docker-compose
 chmod +x /usr/bin/docker-compose
@@ -36,18 +36,16 @@ echo /dev/xvdg /mnt/backup ext4 defaults,nofail 0 2 >> /etc/fstab
 # create dirs
 mkdir -p /etc/docker/compose/madoc/
 mkdir -p /etc/systemd/system/
-mkdir -p /opt/data/mysql_data
 mkdir -p /opt/data/shared_postgres_data
 chmod 777 /opt/data/shared_postgres_data
-mkdir -p /opt/data/omeka_files
-chmod 777 /opt/data/omeka_files/
-mkdir -p /mnt/backup/mysql/.snapshots/
+mkdir -p /opt/data/files
+chmod 777 /opt/data/files/
+mkdir -p /opt/data/files/storage-api/
+chmod 777 /opt/data/files/storage-api/
 mkdir -p /mnt/backup/postgres/.snapshots/
 
 mkdir -p /etc/docker/compose/madoc/var/jwt
 chmod 777 /etc/docker/compose/madoc/var/jwt
-mkdir -p /etc/docker/compose/madoc/var/certs
-chmod 777 /etc/docker/compose/madoc/var/certs
 
 # backup rsnapshot default conf
 cp /etc/rsnapshot.conf /etc/rsnapshot.conf.default
@@ -59,14 +57,13 @@ mv /tmp/backup/*.timer /etc/systemd/system/
 mv /tmp/backup/*.service /etc/systemd/system/
 mv /tmp/backup/*.sh /usr/bin/
 chmod +rwx /usr/bin/backup-madoc.sh
-chmod +rwx /usr/bin/backup-mysql.sh
 chmod +rwx /usr/bin/backup-postgres.sh
 mv /tmp/backup/rsnapshot.conf /etc/rsnapshot.conf
 mv /tmp/backup/rsnapshot-postgres.conf /etc/rsnapshot-postgres.conf
 
 # read parameterstore values and add to EnvironmentFile for systemd
-mv /tmp/.env /etc/madoc-environment
-aws ssm get-parameters-by-path --path /madoc/${prefix}/${workspace} --region ${region} --recursive --with-decryption --no-paginate --output text --query "Parameters[].[Name,'=',Value]" | sed 's/\/madoc\/${prefix}\/${workspace}\///g' | tr -d '[:blank:]' >> /etc/madoc-environment
+mv /tmp/.env /etc/docker/compose/madoc/.env
+aws ssm get-parameters-by-path --path /madoc/${prefix}/${workspace} --region ${region} --recursive --with-decryption --no-paginate --output text --query "Parameters[].[Name,'=',Value]" | sed 's/\/madoc\/${prefix}\/${workspace}\///g' | tr -d '[:blank:]' >> /etc/docker/compose/madoc/.env
 
 # start systemd services
 systemctl start madoc.service

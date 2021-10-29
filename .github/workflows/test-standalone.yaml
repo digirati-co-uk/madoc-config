@@ -10,7 +10,7 @@ jobs:
         run: docker-compose up -d
         continue-on-error: true
       - name: Test
-        run: docker run --network container:standalone-gateway appropriate/curl -s --retry 10 --retry-connrefused http://localhost:8080/s/default/madoc
+        run: docker run --network container:standalone-gateway appropriate/curl -s --retry 10 --retry-connrefused http://localhost:8878/
         continue-on-error: true
       - name: Bring stack down
         run: |

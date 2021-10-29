@@ -30,13 +30,13 @@ The default bootstrap script, specified as [EC2 user_data](https://www.terraform
 
 These variables must take the form `/madoc/{prefix}/{workspace}/{env-var-name}`. The order of the parameters is important as these are fetched [by path](https://docs.aws.amazon.com/cli/latest/reference/ssm/get-parameters-by-path.html) E.g.
 
-* `/madoc/digirati/default/MYSQL_DATABASE`
-* `/madoc/myproj/prd/MYSQL_USER`
+* `/madoc/digirati/default/POSTGRES_DATABASE`
+* `/madoc/myproj/prd/POSTGRES_USER`
 
 Parameters can be stored using the AWS cli
 
 ```bash
-aws ssm put-parameter --name /madoc/digirati/default/MYSQL_DATABASE --value my-db-name --type SecureString
+aws ssm put-parameter --name /madoc/digirati/default/POSTGRES_DATABASE --value my-db-name --type SecureString
 ```
 
 ## Files
@@ -53,9 +53,9 @@ The following files are provided, these can be altered to suit exact requirement
 
 ## Backup Process
 
-There are 2 EBS volumes mounted to the EC2 instance. These are mounted as: `/opt/data/` to store working files for mysql and omeka uploads. `/mnt/backup` to stores backups. A snapshot of the drive mounted at `/mnt/backup` is taken once per day @ 03:30 (controllable by tf variables).
+There are 2 EBS volumes mounted to the EC2 instance. These are mounted as: `/opt/data/` to store working files for postgres and file uploads. `/mnt/backup` to stores backups. A snapshot of the drive mounted at `/mnt/backup` is taken once per day @ 03:30 (controllable by tf variables).
 
 Systemd services for backing up data are:
 
-* `madoc-backup.service` - this runs `madoc-backup.timer` to `rsync` omeka_files on the hour (+/- 5 mins) to `/mnt/backup/omeka_files/`.
-* `madoc-db-backup@.service` - this runs hourly (on the hour), daily (02:30), weekly (01:30 on Sunday), monthly (00:30 1st of month) timers to take mysql dumps to `/mnt/backup/mysql`. See `/files/rsnapshot.conf` for details.
+* `madoc-backup.service` - this runs `madoc-backup.timer` to `rsync` files on the hour (+/- 5 mins) to `/mnt/backup/files/`.
+* `madoc-db-backup@.service` - this runs hourly (on the hour), daily (02:30), weekly (01:30 on Sunday), monthly (00:30 1st of month) timers to take posptgres dumps to `/mnt/backup/postges`. See `/files/rsnapshot-postgres.conf` for details.

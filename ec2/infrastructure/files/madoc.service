@@ -7,7 +7,7 @@ After=docker.service
 Restart=always
 
 WorkingDirectory=/etc/docker/compose/madoc
-EnvironmentFile=/etc/madoc-environment
+EnvironmentFile=/etc/docker/compose/madoc/.env
 
 # Remove old containers, images and volumes
 ExecStartPre=/usr/bin/docker-compose down -v

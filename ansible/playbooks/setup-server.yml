@@ -26,27 +26,21 @@
         state: directory
         mode: '0777'
 
-    - name: Omeka files directory
+    - name: Files directory
       ansible.builtin.file:
-        path: /opt/data/omeka_files
+        path: /opt/data/files
         state: directory
         mode: '0777'
 
     - name: Storage API directory
       ansible.builtin.file:
-        path: /opt/data/omeka_files/storage-api
+        path: /opt/data/files/storage-api
         state: directory
         mode: '0777'
 
     - name: Generated JWT mount
       ansible.builtin.file:
         path: /etc/docker/compose/madoc/var/jwt
-        state: directory
-        mode: '0777'
-
-    - name: Generated certs mount
-      ansible.builtin.file:
-        path: /etc/docker/compose/madoc/var/certs
         state: directory
         mode: '0777'
 

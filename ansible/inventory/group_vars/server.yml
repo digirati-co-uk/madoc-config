@@ -3,23 +3,25 @@
 docker_install_compose: true
 
 madoc:
+  version: 2.0 # Which semver version (e.g. 2, 2.0, 2.0.0)
 
   # Gateway
   gateway:
-    host: https://madoc.stephen.wf/                   # Change this to your domain
-    secret: y@@-rwzsqsqTRcuJjp6L8                     # Change this to a random secret
-    docker_host: http://madoc-platform-omeka/
+    host: https://MY_HOST.madoc.io/                   # Change this to your domain
 
-  # Omeka
-  omeka:
-    smtp_user: ""
-    smtp_password: ""
-    mysql_database: omeka_s
-    mysql_user: omeka_s
-    mysql_password: Testpass123                        # Change
-    mysql_port: 3306
+  # Use the "install code script" to generate a pass-phrase (default: password)
+  installation_code: '$2b$14$Ox8ZXjeGBR7s23VB0wqZuuYwBo13vK3oGfczzj/gQXqYM1/BUXXS6'
 
-  # Postgres connection
+  # Optionally set up your SMTP server.
+  mail_from_user: 'Madoc <noreply@MY_HOST.madoc.io>'
+  smtp:
+    user: ''
+    host: ''
+    port: 1025
+    security: 'None'
+    password: ''
+
+  # Postgres - this can also be used to provision an external postgres. (You will need to update compose)
   shared_postgres:
     database: postgres
     port: 5432

@@ -1,20 +1,13 @@
 version: "3.9"
 services:
 
-
   ## API Gateway
   gateway:
     container_name: standalone-gateway
-    image: ghcr.io/digirati-co-uk/madoc-api-gateway:latest
-    environment:
-      - TYK_GW_STORAGE_HOST=gateway-redis
-      - TYK_GW_SECRET=A_GATEWAY_SECRET
-      - JWT_SERVICES=tasks-api,madoc-api,configuration-api,storage-api
+    image: ghcr.io/digirati-co-uk/madoc-nginx:${MADOC_VERSION:-main}
     ports:
       - "8878:8080"
     links:
-      - madoc
-      - gateway-redis
       - tasks-api
       - model-api
       - madoc-ts
@@ -22,23 +15,12 @@ services:
       - storage-api
       - okra
       - search
-    volumes:
-      - certs:/openssl-certs:Z
-    depends_on:
-      - certs
-      - gateway-redis
-
-  ## Databases + Certs
-  certs:
-    image: ghcr.io/digirati-co-uk/madoc-certs:latest
-    volumes:
-      - certs:/openssl-certs:Z
 
   gateway-redis:
     image: redis:5-alpine
 
   shared-postgres:
-    image: ghcr.io/digirati-co-uk/madoc-shared-postgres:latest
+    image: ghcr.io/digirati-co-uk/madoc-postgres:${MADOC_VERSION:-main}
     environment:
       - POSTGRES_DB=postgres
       - POSTGRES_USER=postgres
@@ -61,43 +43,14 @@ services:
     volumes:
       - shared_postgres_data:/var/lib/postgresql/data:Z
 
-  madoc-database:
-    image: ghcr.io/digirati-co-uk/madoc-mysql:latest
-    environment:
-      - MYSQL_RANDOM_ROOT_PASSWORD=yes
-      - MYSQL_DATABASE=omeka_s
-      - MYSQL_USER=omeka_s
-      - MYSQL_PASSWORD=Password123
-      - MYSQL_PORT=3306
-    volumes:
-      - mysql_data:/var/lib/mysql:Z
-
-
   ## Services.
 
-  madoc:
-    image: ghcr.io/digirati-co-uk/madoc-omeka:latest
-    links:
-      - madoc-database
-    environment:
-      - APP_ENV=production
-      - OMEKA__DATABASE_HOST=madoc-database
-      - OMEKA__DATABASE_NAME=omeka_s
-      - OMEKA__DATABASE_USER=omeka_s
-      - OMEKA__DATABASE_PASSWORD=Password123
-      - OMEKA__DATABASE_PORT=3306
-      - OMEKA__MAIN_SITE_DOMAIN=http://localhost:8878
-    volumes:
-      - omeka_files:/srv/omeka/files:Z
-      - certs:/openssl-certs:Z
-
   madoc-ts:
-    image: ghcr.io/digirati-co-uk/madoc-ts:latest
+    image: ghcr.io/digirati-co-uk/madoc-api:${MADOC_VERSION-main}
     restart: on-failure
     volumes:
-      - certs:/openssl-certs:Z
       - jwt:/home/node/app/service-jwt-responses:Z
-      - omeka_files:/home/node/app/omeka-files:Z
+      - files:/home/node/app/files:Z
     environment:
       - DATABASE_HOST=shared-postgres
       - DATABASE_NAME=postgres
@@ -105,24 +58,15 @@ services:
       - DATABASE_USER=madoc_ts
       - DATABASE_SCHEMA=madoc_ts
       - DATABASE_PASSWORD=madoc_ts_password
-      - OMEKA__DATABASE_HOST=madoc-database
-      - OMEKA__DATABASE_NAME=omeka_s
-      - OMEKA__DATABASE_USER=omeka_s
-      - OMEKA__DATABASE_PASSWORD=Password123
-      - OMEKA__DATABASE_PORT=3306
-      - OMEKA__URL=http://madoc
       - REDIS_HOST=gateway-redis
-      - API_GATEWAY=http://gateway:8080
-      - OMEKA_FILE_DIRECTORY=/home/node/app/omeka-files
+      - STORAGE_FILE_DIRECTORY=/home/node/app/files
       - NODE_ENV=production
       - MIGRATE=true
+      - MADOC_INSTALLATION_CODE=${MADOC_INSTALLATION_CODE:-$2b$14$Ox8ZXjeGBR7s23VB0wqZuuYwBo13vK3oGfczzj/gQXqYM1/BUXXS6}
+      - API_GATEWAY=http://gateway:8080
       - GATEWAY_HOST=http://localhost:8878
     links:
       - shared-postgres
-      - madoc-database
-      - madoc
-    depends_on:
-      - certs
 
   tasks-api:
     image: ghcr.io/digirati-co-uk/tasks-api:latest
@@ -143,8 +87,10 @@ services:
 
   storage-api:
     image: ghcr.io/digirati-co-uk/storage-api:latest
+    environment:
+      - GATEWAY_HOST=http://localhost:8878
     volumes:
-      - storage-api:/home/node/app/files
+      - storage-api:/home/node/app/files:Z
 
   ## Docker hub services
   model-api:
@@ -181,7 +127,7 @@ services:
       - shared-postgres
 
   search:
-    image: digirati/madoc-search:533bc1f
+    image: digirati/madoc-search:latest
     environment:
       - BROWSABLE=False
       - USE_DOCKER=yes
@@ -202,18 +148,16 @@ services:
       - shared-postgres
 
   okra:
-    image: digirati/okra:5d129c8
+    image: digirati/okra:latest
 
 volumes:
 
   # Shared resources
-  certs: {}
   jwt: {}
 
   # Databases
   shared_postgres_data: {}
-  mysql_data: {}
 
   # Files
-  omeka_files: {}
+  files: {}
   storage-api: {}
