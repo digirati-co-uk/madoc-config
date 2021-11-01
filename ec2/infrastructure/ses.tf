@@ -1,9 +1,11 @@
 locals {
-    zone_id = data.aws_route53_zone.EXAMPLE_NAME_madoc_io.zone_id
+  zone_id = data.aws_route53_zone.EXAMPLE_NAME_madoc_io.zone_id
 }
 
+# Alias provider setup - only required if main region doesn't support SES
+# If region does support SES, remove "provider = aws.west" from below resources
 provider "aws" {
-  alias = "west"
+  alias   = "west"
   version = "~> 2.46"
   region  = "eu-west-1"
 }
@@ -11,7 +13,7 @@ provider "aws" {
 # domain verification
 resource "aws_ses_domain_identity" "EXAMPLE_NAME_madoc_io" {
   provider = aws.west
-  domain = var.madoc_domain
+  domain   = var.madoc_domain
 }
 
 resource "aws_route53_record" "ses_verification" {
@@ -23,7 +25,7 @@ resource "aws_route53_record" "ses_verification" {
 }
 
 resource "aws_ses_domain_identity_verification" "EXAMPLE_NAME_madoc_io_verification" {
-  domain = aws_ses_domain_identity.EXAMPLE_NAME_madoc_io.id
+  domain   = aws_ses_domain_identity.EXAMPLE_NAME_madoc_io.id
   provider = aws.west
 
   depends_on = [aws_route53_record.ses_verification]
@@ -31,18 +33,14 @@ resource "aws_ses_domain_identity_verification" "EXAMPLE_NAME_madoc_io_verificat
 
 # DKIM verification
 resource "aws_ses_domain_dkim" "main" {
-  domain = aws_ses_domain_identity.EXAMPLE_NAME_madoc_io.domain
+  domain   = aws_ses_domain_identity.EXAMPLE_NAME_madoc_io.domain
   provider = aws.west
 }
 
 resource "aws_route53_record" "dkim" {
   count   = 3
   zone_id = local.zone_id
-  name = format(
-    "%s._domainkey.%s",
-    element(aws_ses_domain_dkim.main.dkim_tokens, count.index),
-    var.madoc_domain,
-  )
+  name    = "${element(aws_ses_domain_dkim.example.dkim_tokens, count.index)}._domainkey"
   type    = "CNAME"
   ttl     = "600"
   records = ["${element(aws_ses_domain_dkim.main.dkim_tokens, count.index)}.dkim.amazonses.com"]
@@ -52,7 +50,7 @@ resource "aws_route53_record" "dkim" {
 resource "aws_ses_domain_mail_from" "noreply" {
   domain           = aws_ses_domain_identity.EXAMPLE_NAME_madoc_io.domain
   mail_from_domain = "mail.${var.madoc_domain}"
-  provider = aws.west
+  provider         = aws.west
 }
 
 # SPF validaton record
@@ -132,18 +130,18 @@ resource "aws_ssm_parameter" "smtp_username" {
   value = aws_iam_access_key.madoc.id
 
   tags = {
-      "terraform" = true,
-      "system" = "madoc"
+    "terraform" = true,
+    "system"    = "madoc"
   }
 }
 
 resource "aws_ssm_parameter" "smtp_password" {
   name  = "/madoc/${var.prefix}/${terraform.workspace}/SMTP_PASSWORD"
   type  = "SecureString"
-  value = aws_iam_access_key.madoc.ses_smtp_password
+  value = aws_iam_access_key.madoc.ses_smtp_password_v4
 
   tags = {
-      "terraform" = true,
-      "system" = "madoc"
+    "terraform" = true,
+    "system"    = "madoc"
   }
 }

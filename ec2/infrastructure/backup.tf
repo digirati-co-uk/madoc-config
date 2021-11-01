@@ -25,7 +25,10 @@ data "aws_iam_policy_document" "dlm_backup_abilities" {
       "ec2:DescribeVolumes",
       "ec2:DescribeSnapshots",
     ]
-    resources = ["*"]
+
+    resources = [
+      aws_instance.madoc.arn
+    ]
   }
 
   statement {
