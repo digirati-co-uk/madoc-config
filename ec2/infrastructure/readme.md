@@ -6,7 +6,7 @@ Creates an EC2 instance with EBS volumes in a VPC with single subnet and gateway
 
 ## Prerequisites
 
-* [Terraform](https://www.terraform.io) 0.12+.
+* [Terraform](https://www.terraform.io) 1.0+.
 * Madoc variables will need to be configured in [AWS Parameter Store](https://docs.aws.amazon.com/systems-manager/latest/userguide/systems-manager-parameter-store.html). See [environment variables](#Madoc-Environment-Variables), below, for more information.
 * Ensure there is a public key in `files\key.pub` for adding to the EC2 instance (e.g. via `ssh-keygen -t rsa -b 4096`). If there is an existing key to be used comment out the `data.template_file` and `aws_key_pair.auth` resources and set the key name in `aws_instance.madoc.key_name` property.
 * A value for the Terraform `key_pair_private_key_path` variable. This is for ssh connection for file provisioner.
@@ -48,6 +48,8 @@ The following files are provided, these can be altered to suit exact requirement
 * [ec2.tf](ec2.tf) - creates and bootstraps EC2 instance with docker-compose file running under systemd. Creates EBS instances for storing data.
 * [backup.tf](backup.tf) - infrastructure for taking EBS snapshots.
 * [network.tf](network.tf) - VPC, subnets etc.
+* [dns.tf](dns.tf) - creation of A record to elastic IP.
+* [ses.tf](ses.tf) - setup of SES for SMTP sending.
 
 ## Implementation Details
 

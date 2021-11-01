@@ -46,6 +46,8 @@ mkdir -p /mnt/backup/postgres/.snapshots/
 
 mkdir -p /etc/docker/compose/madoc/var/jwt
 chmod 777 /etc/docker/compose/madoc/var/jwt
+mkdir -p /etc/docker/compose/madoc/var/certs
+chmod 777 /etc/docker/compose/madoc/var/certs
 
 # backup rsnapshot default conf
 cp /etc/rsnapshot.conf /etc/rsnapshot.conf.default
@@ -60,6 +62,10 @@ chmod +rwx /usr/bin/backup-madoc.sh
 chmod +rwx /usr/bin/backup-postgres.sh
 mv /tmp/backup/rsnapshot.conf /etc/rsnapshot.conf
 mv /tmp/backup/rsnapshot-postgres.conf /etc/rsnapshot-postgres.conf
+
+mv /tmp/shutdown/handle-shutdown.service /etc/systemd/system/handle-shutdown.service
+mv /tmp/shutdown/cleanup-ebs.sh /usr/bin/cleanup-ebs.sh
+chmod +rwx /usr/bin/cleanup-ebs.sh
 
 # read parameterstore values and add to EnvironmentFile for systemd
 mv /tmp/.env /etc/docker/compose/madoc/.env

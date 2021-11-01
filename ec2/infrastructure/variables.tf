@@ -11,10 +11,10 @@ locals {
 
   account_id = data.aws_caller_identity.current.account_id
 
-  ami = "ami-0b3566b9ddcb56ee3"
+  ami = "Ubuntu bionic amd64 hvm-ssd"  # https://cloud-images.ubuntu.com/locator/
 }
 
-variable egress_whitelist {
+variable "egress_whitelist" {
   type        = list(string)
   description = "List of whitelisted CIDR ranges for SSH access"
 
@@ -29,25 +29,25 @@ variable "region" {
   default     = "eu-west-3"
 }
 
-variable availability_zone {
+variable "availability_zone" {
   type        = string
   description = "Availability zone"
   default     = "eu-west-3a"
 }
 
-variable root_size {
+variable "root_size" {
   type        = number
   description = "Size of root EBS volume, in GiB"
   default     = 30
 }
 
-variable ebs_size {
+variable "ebs_size" {
   type        = number
   description = "Size of EBS data volume, in GiB"
   default     = 20
 }
 
-variable ebs_backup_size {
+variable "ebs_backup_size" {
   type        = number
   description = "Size of EBS backup volume, in GiB"
   default     = 30
@@ -80,7 +80,7 @@ variable "instance_type" {
 variable "docker_compose_file" {
   type        = string
   description = "Relative path to compose file for Madoc"
-  default     = "../docker-compose.qa.yaml"
+  default     = "../docker-compose.yaml"
 }
 
 variable "prefix" {
@@ -89,12 +89,12 @@ variable "prefix" {
   default     = "EXAMPLE_NAME"
 }
 
-variable key_pair_private_key_path {
+variable "key_pair_private_key_path" {
   type        = string
   description = "Path to private key for connecting to EC2 instance"
 }
 
-variable madoc_domain {
+variable "madoc_domain" {
   type        = string
   description = "Base domain for Madoc instance"
   default     = "EXAMPLE_NAME.madoc.io"

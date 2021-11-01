@@ -1,0 +1,11 @@
+[Unit]
+Description=Unmount EBS volumes on shutdown
+Before=shutdown.target reboot.target halt.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=true
+ExecStop=/usr/bin/cleanup-ebs.sh
+
+[Install]
+WantedBy=multi-user.target
